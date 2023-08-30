@@ -174,9 +174,9 @@ class High_MPC(object):
         u_max = [self.a_max,  self.delta_max] #
         x_bound = np.inf #x_bound = ca.inf
         x_min = [-x_bound for _ in range(self._s_dim)]
-        x_min[1] = -self.lane_len + 2.5
+        x_min[1] = -self.lane_len + 2.25
         x_max = [x_bound  for _ in range(self._s_dim)]
-        x_max[1] = self.lane_len - 2.5
+        x_max[1] = self.lane_len - 2.25
 
         #
         g_min = [0 for _ in range(self._s_dim)]

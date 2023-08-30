@@ -35,7 +35,7 @@ def main():
 
 def eval_learningMPC(args):
 
-    use_learning =  True
+    use_learning = True
 
     eval_mode = 'CRL' # CRL,standardRL or human-expert
 
@@ -96,7 +96,7 @@ def eval_learningMPC(args):
 
         if not (use_learning):
             # decision varaibles are designed by human-expert experience
-            high_variable[0] = obs.detach().numpy().tolist()[5] + 6 # px
+            high_variable[0] = obs.detach().numpy().tolist()[5] + 10 # px
             high_variable[1] = -env.lane_len/2 # py
             high_variable[2] = 0 # heading
             high_variable[3] = 10 # vx
@@ -108,7 +108,7 @@ def eval_learningMPC(args):
             high_variable[9] = 10 # Qvx
             high_variable[10] = 10 # Qvy
             high_variable[11] = 10 # Qomega
-            high_variable[-1] = 2 # t
+            high_variable[-1] = 1.7 # t
 
         worker.run_episode(high_variable, args)
 

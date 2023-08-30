@@ -37,7 +37,7 @@ class Env(object):
 
         # Road Parameters
         self.world_size = 120 # 80
-        self.lane_len = 6
+        self.lane_len = 5 # 6
 
         self.curriculum_mode = curriculum_mode
         self.use_SE3 = use_SE3
@@ -47,7 +47,7 @@ class Env(object):
         
         ## Planner 
         if not (self.use_SE3):
-            self.sigma = 1 # 10
+            self.sigma = 10 # 1
         else:
             self.sigma = 10
     
@@ -55,6 +55,8 @@ class Env(object):
             low=np.array([-3.0, -0.6]), #low=np.array([-3.0]),
             high=np.array([1.5, 0.6]) #high=np.array([2*self.plan_T])
         )
+
+        self.upflow_pos = 50
 
         # reset the environment
         self.eval = eval
@@ -84,7 +86,7 @@ class Env(object):
             )
             # Sampling range of the front vehicle's initial position
             self.f_v_relxy_dist = np.array(
-                [ [25, 35]]   # x
+                [ [10, 20]]   # x
             )
             # Sampling range of the front vehicle's initial velocity
             self.f_v_vxy_dist = np.array(
@@ -94,14 +96,14 @@ class Env(object):
 
             # Chance Parameters
             self.chance_pos = [self.vehicle_state[kpx]+np.random.uniform(
-                    low=self.c_xy_reldist[0, 0], high=self.c_xy_reldist[0, 1]),self.lane_len/2] # [0, 2.0]
+                    low=self.c_xy_reldist[0, 0], high=self.c_xy_reldist[0, 1]), self.lane_len/2] # [0, 2.0]
             
             self.end_con = np.pi
             
         elif self.curriculum_mode == 'easy':
             # Sampling range of the chance's initial position
             self.c_xy_reldist = np.array(
-                [ [15, 55]]   # x
+                [ [5, 40]]   # x
             )
             # Sampling range of the chance's initial velocity
             self.c_vxy_dist = np.array(
@@ -110,7 +112,7 @@ class Env(object):
             )
             # Sampling range of the front vehicle's initial position
             self.f_v_relxy_dist = np.array(
-                [ [15, 25]]   # x
+                [ [10, 20]]   # x
             )
             # Sampling range of the front vehicle's initial velocity
             self.f_v_vxy_dist = np.array(
@@ -126,16 +128,16 @@ class Env(object):
         elif self.curriculum_mode == 'medium':
             # Sampling range of the chance's initial position
             self.c_xy_reldist = np.array(
-                [ [15, 40]]   # x
+                [ [10, 25]]   # x
             )
             # Sampling range of the chance's initial velocity
             self.c_vxy_dist = np.array(
-                [ [0.5, 2]  # vx
+                [ [0.5, 3]  # vx
                 ] 
             )
             # Sampling range of the front vehicle's initial position
             self.f_v_relxy_dist = np.array(
-                [ [15, 25]]   # x
+                [ [10, 30]]   # x
             )
             # Sampling range of the front vehicle's initial velocity
             self.f_v_vxy_dist = np.array(
@@ -151,17 +153,17 @@ class Env(object):
         elif self.curriculum_mode == 'hard':
             # Sampling range of the chance's initial position
             self.c_xy_reldist = np.array(
-               [ [10, 30]
+               [ [15, 20] # 10 15
                   ]   # x
             )
             # Sampling range of the chance's initial velocity
             self.c_vxy_dist = np.array(
-                [ [2, 4]  # vx
+                [ [3, 4]  # vx  # 
                 ] 
             )
             # Sampling range of the front vehicle's initial position
             self.f_v_relxy_dist = np.array(
-                [ [20, 25]]   # x 25 35
+                [ [10, 20]]   # x 25 35
             )
             # Sampling range of the front vehicle's initial velocity
             self.f_v_vxy_dist = np.array(
@@ -176,7 +178,7 @@ class Env(object):
             
         self.chance_vel = np.random.uniform(
                 low=self.c_vxy_dist[0, 0], high=self.c_vxy_dist[0, 1])
-        
+
         self.chance_len = self.lane_len *2 #+ self.vehicle_length
         self.chance_wid = self.vehicle_width
 
@@ -203,12 +205,12 @@ class Env(object):
         
         return self.obs
 
-    def step(self, high_variable, step_i):
+    def step(self, high_variable, step_i, use_vanilla=False):
         
         if not (self.use_SE3):
             value_Qmax = high_variable[6:12]
         else:
-            value_Qmax = [100, 100, 10]
+            value_Qmax = [700, 1500, 100]
 
         if self.mpc is None: 
             if (self.eval):
@@ -243,7 +245,14 @@ class Env(object):
         self.vehicle_state = self.vehicle.run(_act)
         self.vehicle_pos = self.vehicle_state[kpx:kpy+1]
 
-        self.chance_pos[0] += self.chance_vel*self.sim_dt
+        if self.curriculum_mode == 'medium' or 'hard':
+            self.chance_pos[0] += (self.chance_vel+np.random.uniform(low=-0.2, high=0.2)) *self.sim_dt
+        else:
+            self.chance_pos[0] += (self.chance_vel) *self.sim_dt
+
+        self.upflow_pos +=  (1.25 * self.chance_vel) * self.sim_dt
+        #print(self.upflow_pos)
+
         self.goal[0] = self.chance_pos[0]+self.vehicle_length/2
 
         self.f_v_pos[0] += self.f_v_vel*self.sim_dt
@@ -311,7 +320,8 @@ class Env(object):
             "plan_dt": self.plan_dt,
             "surr_v_left": self.surr_v_left,
             "surr_v_right": self.surr_v_right,
-            "high_variable": high_variable
+            "high_variable": high_variable,
+            "upflow_pos": self.upflow_pos
 
             #"cost": cost
             }
@@ -319,7 +329,7 @@ class Env(object):
         done = False
 
         # target reward for each curriculum
-        dist2desti = 0.5 * np.linalg.norm(np.array(self.goal[0:2]) - np.array(self.vehicle_state)[0:2]) + 5 * np.linalg.norm(np.array(self.goal[2]) - np.array(self.vehicle_state)[2])
+        dist2desti = 0.3 * np.linalg.norm(np.array(self.goal[0:2]) - np.array(self.vehicle_state)[0:2]) + 20 * np.linalg.norm(np.array(self.goal[2]) - np.array(self.vehicle_state)[2])
         if dist2desti < self.end_con: #1.25
             done = True
 
@@ -327,6 +337,8 @@ class Env(object):
                 reward += 100
             elif self.curriculum_mode == 'hard':
                 reward += 100
+                #if step_i == 0:
+                    #reward -= abs(high_variable[-1]) #### trcik here
 
             if self.collided == False:
                 self.success = True

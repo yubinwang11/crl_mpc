@@ -45,35 +45,45 @@ class SimVisual(object):
         self.frames = []
         #
         # create figure
-        #self.fig = plt.figure(figsize=(15,15)) # 20 15、
-        self.fig = plt.figure(figsize=(20,20))
-        # and figure grid
-        self.gs = gridspec.GridSpec(nrows=20, ncols=1)
-        #self.gs = gridspec.GridSpec(nrows=1, ncols=1)
-        
         # Create layout of our plots
-        #
-        ax_2d = self.fig.add_subplot(self.gs[:5, :])
-        ax_2d.grid(True)
-        #self.ax_2d = self.fig.add_subplot()
-        ax_2d.set_xlim([20, 72]) #self.ax_2d.set_xlim([-1, 1])
-        ax_2d.set_ylim([-13, 13]) #self.ax_2d.set_ylim([-1, 1]) 25 25
-        ax_2d.set_xlabel("${p_x} (m)$", fontsize=25)
-        ax_2d.set_ylabel("${p_y} (m)$", fontsize=25)
-        plt.xticks(size = 33) # ontproperties = 'Times New Roman', 
-        plt.yticks(size = 33)
 
+    ####################################################
+        self.fig = plt.figure(figsize=(20,20))
+        #self.fig = plt.figure(figsize=(16.5,16.5))  # 19.9,19.9  
+        self.gs = gridspec.GridSpec(nrows=20, ncols=1)
+        #self.ax_2d = self.fig.add_subplot(self.gs[:10, :])
+        ax_2d = self.fig.add_subplot(self.gs[:10, :])
+
+        self.label_fontsize = 40 #
+        self.legend_fontsize = 30 #20
+        self.stick_fontsize = 40
+
+        x_major_locator_2d = MultipleLocator(10)
+        ax_2d.xaxis.set_major_locator(x_major_locator_2d)
+
+        ax_2d.grid(True)
+        ax_2d.set_xlim([20, 80]) #self.ax_2d.set_xlim([-1, 1]) 20 72 90
+        ax_2d.set_ylim([-15, 15]) #self.ax_2d.set_ylim([-1, 1]) 25 25 -13 13
+        ax_2d.set_xlabel("${p_x}(m)$", fontsize=self.label_fontsize)
+        ax_2d.set_ylabel("${p_y}(m)$", fontsize=self.label_fontsize)
+        plt.xticks(size = self.stick_fontsize) # ontproperties = 'Times New Roman', 
+        plt.yticks(size = self.stick_fontsize)
+        
+        ##############################################
+
+        # Plot 2D coordinates,
         self.l_vehicle_pred_traj, = ax_2d.plot([], [], 'r*',  markersize=7)
 
-        self.l_vehicle_outline, = ax_2d.plot([], [], 'royalblue', linewidth=3)
+        self.l_vehicle_outline, = ax_2d.plot([], [], 'royalblue', linewidth=5)
 
-        self.l_f_v_outline, = ax_2d.plot([], [], 'darkorange', linewidth=3)
-        self.l_trafficflow_left, = ax_2d.plot([], [], 'darkorange', linewidth=3)
-        self.l_trafficflow_right, = ax_2d.plot([], [], 'darkorange', linewidth=3)
+        self.l_f_v_outline, = ax_2d.plot([], [], 'darkorange', linewidth=5)
+        self.l_trafficflow_left, = ax_2d.plot([], [], 'darkorange', linewidth=5)
+        self.l_trafficflow_right, = ax_2d.plot([], [], 'darkorange', linewidth=5)
 
         self.chance_pos = self.env.chance_pos
         self.chance_len = self.env.chance_len
         self.chance_wid = self.env.chance_wid
+        self.upflow_pos = self.env.upflow_pos
 
         #self.p_high_variable = self.ax_2d.scatter([], [],  marker='*', color='brown')
 
@@ -93,6 +103,7 @@ class SimVisual(object):
         self.l_vehicle_outline.set_data([], [])
         #self.l_vehicle_fill.set_data([], [])
         self.l_f_v_outline.set_data([], [])
+        #self.l_surrounding_v_outline.set_data([], [])
 
         self.l_trafficflow_left.set_data([], [])
         self.l_trafficflow_right.set_data([], [])
@@ -100,9 +111,11 @@ class SimVisual(object):
         return self.l_vehicle_pred_traj, \
             self.l_vehicle_outline, self.l_f_v_outline, \
             self.l_trafficflow_left, self.l_trafficflow_right, \
-    
+
     def update(self, data_info):
 
+        #self.ax_2d.clear()
+        
         info, t, update = data_info[0], data_info[1], data_info[2]
 
         vehicle_state = info["vehicle_state"]
@@ -115,7 +128,8 @@ class SimVisual(object):
         high_variable = info["high_variable"]
         current_t = info["current_t"]
         #plan_dt = info["plan_dt"]
-        
+        self.upflow_pos = info["upflow_pos"]
+
         if update:
             self.reset_buffer()
         else:
@@ -128,37 +142,45 @@ class SimVisual(object):
             self.vehicle_vx.append(vehicle_state[kvx])
             self.vehicle_vy.append(vehicle_state[kvy])
 
+        #ax_2d = None:
         if len(self.ts) == 0:
             self.init_animate()
+            pass
         else:
-            self.fig = plt.figure(figsize=(38,38))
-            self.gs = gridspec.GridSpec(nrows=20, ncols=1)
-            ax_2d = self.fig.add_subplot(self.gs[:10, :])
+            
+            #if ax_2d is not None:
+                #ax_2d.clear()
 
-            self.label_fontsize = 55
-            self.legend_fontsize = 70
-            self.stick_fontsize = 45
+            self.fig = plt.figure(figsize=(20,20))
+            #self.fig = plt.figure(figsize=(16.5,16.5))  # 19.9,19.9  
+            self.gs = gridspec.GridSpec(nrows=20, ncols=1)
+        
+            #self.ax_2d = self.fig.add_subplot(self.gs[:10, :])
+            ax_2d = self.fig.add_subplot(self.gs[:8, :])
+
+            self.label_fontsize = 25 # 
+            self.legend_fontsize = 25 #20
+            self.stick_fontsize = 20
 
             x_major_locator_2d = MultipleLocator(10)
             ax_2d.xaxis.set_major_locator(x_major_locator_2d)
 
             ax_2d.grid(True)
-            ax_2d.set_xlim([25, 77]) #self.ax_2d.set_xlim([-1, 1]) 20 72
-            ax_2d.set_ylim([-13, 13]) #self.ax_2d.set_ylim([-1, 1]) 25 25 -13 13
+            ax_2d.set_xlim([25, 85]) #self.ax_2d.set_xlim([-1, 1]) 20 72 90
+            ax_2d.set_ylim([-10, 14]) #self.ax_2d.set_ylim([-1, 1]) 25 25 -13 13
             ax_2d.set_xlabel("${p_x}(m)$", fontsize=self.label_fontsize)
             ax_2d.set_ylabel("${p_y}(m)$", fontsize=self.label_fontsize)
             plt.xticks(size = self.stick_fontsize) # ontproperties = 'Times New Roman', 
             plt.yticks(size = self.stick_fontsize)
-        
-            self.l_mainroad_up, = ax_2d.plot([0,self.world_size], [self.lane_len,self.lane_len], 'black', linewidth=5)
+
+            self.l_mainroad_upbound, = ax_2d.plot([0,self.world_size], [2*self.lane_len,2*self.lane_len], 'black', linewidth=4)
+            self.l_mainroad_up, = ax_2d.plot([0,self.world_size], [self.lane_len,self.lane_len], 'black', linewidth=4, linestyle='dashed')
             self.l_mainroad_mid, = ax_2d.plot([0,self.world_size], [0,0], 'black', linewidth=4, linestyle='dashed')
-            self.l_mainroad_dw, = ax_2d.plot([0,self.world_size], [-self.lane_len,-self.lane_len], 'black', linewidth=5)
+            self.l_mainroad_dw, = ax_2d.plot([0,self.world_size], [-self.lane_len,-self.lane_len], 'black', linewidth=4)
 
-            #self.l_vehicle_pred_traj, = ax_2d.plot([], [], 'r*',  markersize=7)
-            #self.l_vehicle_pred_traj.set_data([], [])
-
-            self.art = ax_2d.scatter([],[], s =200, c=[])
-            self.cax = self.fig.add_subplot(self.gs[10, :])
+        
+            self.art = ax_2d.scatter([],[], s =70, c=[])
+            self.cax = self.fig.add_subplot(self.gs[9, :])
             self.cmap = mpl.cm.winter
             self.norm = mpl.colors.Normalize(vmin=-3, vmax=15)
             self.cb = mpl.colorbar.ColorbarBase(self.cax, cmap=self.cmap, norm=self.norm, orientation='horizontal') 
@@ -167,8 +189,8 @@ class SimVisual(object):
             plt.xticks(size = self.stick_fontsize) # ontproperties = 'Times New Roman', 
             plt.yticks(size = self.stick_fontsize)
 
-            self.art_pred = ax_2d.scatter([],[],s =200, c=[])
-            self.cax_pred = self.fig.add_subplot(self.gs[11, :])
+            self.art_pred = ax_2d.scatter([],[],s =70, c=[])
+            self.cax_pred = self.fig.add_subplot(self.gs[10, :])
             self.cmap_pred = mpl.cm.autumn
             self.norm_pred = mpl.colors.Normalize(vmin=-3, vmax=15)
             self.cb = mpl.colorbar.ColorbarBase(self.cax_pred, cmap=self.cmap_pred, norm=self.norm_pred, orientation='horizontal') 
@@ -176,22 +198,23 @@ class SimVisual(object):
             self.cax_pred.set_ylabel("Pred.", fontsize=self.label_fontsize)
             plt.xticks(size = self.stick_fontsize) # ontproperties = 'Times New Roman', 
             plt.yticks(size = self.stick_fontsize)
+            
 
             x_major_locator_color = MultipleLocator(4)
             self.cax.xaxis.set_major_locator(x_major_locator_color)
             self.cax_pred.xaxis.set_major_locator(x_major_locator_color)
-
+        
 
             self.ax_speed = self.fig.add_subplot(self.gs[12:16, :])
             self.ax_speed.grid(True)
             self.ax_speed.set_ylim([-5, 15])
-            self.ax_speed.set_xlim([0, self.t_max/2+1])
+            self.ax_speed.set_xlim([0, self.t_max/2 -1 ]) #+1
             plt.xticks(size = self.stick_fontsize) # ontproperties = 'Times New Roman', 
             plt.yticks(size = self.stick_fontsize)
 
-            self.l_vx, = self.ax_speed.plot([], [], 'royalblue', label='${v_x}$', linewidth=7)
-            self.l_vy, = self.ax_speed.plot([], [], 'darkorange', label='${v_y}$', linewidth=7)
-            self.ax_speed.legend( handles=[self.l_vx, self.l_vy], fontsize=self.legend_fontsize, loc=0)
+            self.l_vx, = self.ax_speed.plot([], [], 'royalblue', label='${v_x}$', linewidth=4)
+            self.l_vy, = self.ax_speed.plot([], [], 'darkorange', label='${v_y}$', linewidth=4)
+            self.ax_speed.legend( handles=[self.l_vx, self.l_vy], fontsize=self.legend_fontsize, loc=1)
             x_major_locator = MultipleLocator(2)
             y_major_locator = MultipleLocator(5)
             self.ax_speed.xaxis.set_major_locator(x_major_locator)
@@ -203,7 +226,7 @@ class SimVisual(object):
             self.ax_act = self.fig.add_subplot(self.gs[16:20, :])
             self.ax_act.grid(True)
             self.ax_act.set_ylim([self.act_min-3, self.act_max+3])
-            self.ax_act.set_xlim([0, self.t_max/2+2])
+            self.ax_act.set_xlim([0, self.t_max/2 -1 ]) # +1
             plt.xticks(size = self.stick_fontsize) # ontproperties = 'Times New Roman', 
             plt.yticks(size = self.stick_fontsize)
 
@@ -211,9 +234,9 @@ class SimVisual(object):
             self.ax_speed.set_ylabel("Speed($m/s$)", fontsize=self.label_fontsize)
 
 
-            self.l_acc, = self.ax_act.plot([], [], 'crimson', label='${a} (m/s^2)$ ', linewidth=7)
-            self.l_steer, = self.ax_act.plot([], [], 'goldenrod', label='${\delta} (rad)$', linewidth=7)
-            self.ax_act.legend( handles=[self.l_acc, self.l_steer], fontsize=self.legend_fontsize, loc=4)
+            self.l_acc, = self.ax_act.plot([], [], 'crimson', label='${a} (m/s^2)$ ', linewidth=4)
+            self.l_steer, = self.ax_act.plot([], [], 'goldenrod', label='${\delta} (rad)$', linewidth=4)
+            self.ax_act.legend( handles=[self.l_acc, self.l_steer], fontsize=self.legend_fontsize, loc=3)
 
             self.ax_act.xaxis.set_major_locator(x_major_locator)
             self.ax_act.yaxis.set_major_locator(y_major_locator)
@@ -233,7 +256,6 @@ class SimVisual(object):
 
             self.l_vx.set_data(self.ts, self.vehicle_vx)
             self.l_vy.set_data(self.ts, self.vehicle_vy)
-
 
             vehicle_pos_arr = np.array(self.vehicle_pos)
             #
@@ -255,23 +277,35 @@ class SimVisual(object):
             self.ego_v = ax_2d.imshow(self.ego_v_img, interpolation='none',
                                                                 origin='lower',  extent=(vehicle_pos_arr[-1, 0]-self.vehicle_length/1.8,vehicle_pos_arr[-1, 0]+self.vehicle_length/1.8,\
                                                                 vehicle_pos_arr[-1, 1]-self.vehicle_width/1.8,vehicle_pos_arr[-1, 1]+self.vehicle_width/1.8), clip_on=True)
-
+            
             trans_data =  mtransforms.Affine2D().rotate_deg_around(vehicle_pos_arr[-1, 0], vehicle_pos_arr[-1, 1], np.rad2deg(yaw)) + ax_2d.transData
             self.ego_v.set_transform(trans_data)
 
             self.f_v = ax_2d.imshow(self.f_v_img, extent=(f_v_pos[0]-self.vehicle_length/1.8,f_v_pos[0]+self.vehicle_length/1.8,-self.vehicle_width/1.8-self.lane_len/2,+self.vehicle_width/1.8-self.lane_len/2))
 
-            trafficflow_gap_len = self.vehicle_length + 3.5
+            trafficflow_gap_len = 2 * self.vehicle_length -1 #+ 3.5
             left_trafficflow_len = abs(self.chance_pos[0] - self.chance_len/2)
             left_trafficflow_vehicle_num = int(left_trafficflow_len // trafficflow_gap_len)
             right_trafficflow_len = abs(self.world_size - (self.chance_pos[0] + self.chance_len/2))
             right_trafficflow_vehicle_num = int(right_trafficflow_len // trafficflow_gap_len)
+            upleft_trafficflow_len = abs(self.upflow_pos)
+            upright_trafficflow_len = abs(self.world_size-self.upflow_pos)
+            upleft_trafficflow_vehicle_num = int(upleft_trafficflow_len // trafficflow_gap_len)
+            upright_trafficflow_vehicle_num = int(upright_trafficflow_len // trafficflow_gap_len)
+
+            front_flow_len = abs(self.world_size - f_v_pos[0])
+            front_flow_num = int(front_flow_len // trafficflow_gap_len)
 
             trafficflow_left_outline = []
             self.flow_v_list = []
             for num_left in range(left_trafficflow_vehicle_num):
-                center_left = (self.chance_pos[0] - self.chance_len/2) - self.vehicle_length/2
-                center_left -= num_left * trafficflow_gap_len
+                center_left = (self.chance_pos[0] - self.chance_len/2) - self.vehicle_length/2 
+                if num_left != 0:
+                    pos_noise = np.random.uniform(low=-1, high=1)
+                else:
+                    pos_noise = 0
+                center_left -= num_left * trafficflow_gap_len + pos_noise
+
                 trafficflow_left_vehicle = np.array([[center_left+self.vehicle_length/2, center_left+self.vehicle_length/2, center_left-self.vehicle_length/2, center_left-self.vehicle_length/2,center_left+self.vehicle_length/2,center_left+self.vehicle_length/2,center_left-self.vehicle_length/2,center_left-self.vehicle_length/2,],
                         [self.lane_len/2, -self.chance_wid/2+self.lane_len/2, -self.chance_wid/2+self.lane_len/2, +self.chance_wid/2+self.lane_len/2, +self.chance_wid/2+self.lane_len/2, -self.chance_wid/2+self.lane_len/2, -self.chance_wid/2+self.lane_len/2, self.lane_len/2]])
                 trafficflow_left_outline.append(trafficflow_left_vehicle)
@@ -279,13 +313,21 @@ class SimVisual(object):
                 ith_car_left = num_left % 3
                 img_path = self.surr_v_color_list[ith_car_left]
                 self.flow_v_img = Image.open(img_path)
-                self.flow_v = ax_2d.imshow(self.flow_v_img, extent=(center_left-self.vehicle_length/1.8,center_left+self.vehicle_length/1.8,-self.vehicle_width/1.8+self.lane_len/2,+self.vehicle_width/1.8+self.lane_len/2))
+                y_noise = self.get_y_noise()
+                self.flow_v = ax_2d.imshow(self.flow_v_img, extent=(center_left-self.vehicle_length/1.8,center_left+self.vehicle_length/1.8,-self.vehicle_width/1.8+y_noise+self.lane_len/2,+self.vehicle_width/1.8+y_noise+self.lane_len/2))
+                random_yaw = self.get_random_yaw()
+                trans_data =  mtransforms.Affine2D().rotate_deg_around(center_left, y_noise+self.lane_len/2, np.rad2deg(random_yaw)) + ax_2d.transData
+                self.flow_v.set_transform(trans_data)
                 self.flow_v_list.append(self.flow_v)
 
             trafficflow_right_outline = []
             for num_right in range(right_trafficflow_vehicle_num):
                 center_right = (self.chance_pos[0] + self.chance_len/2) + self.vehicle_length/2
-                center_right += num_right * trafficflow_gap_len
+                if num_right != 0:
+                    pos_noise = np.random.uniform(low=-1, high=1)
+                else:
+                    pos_noise = 0
+                center_right += num_right * trafficflow_gap_len + pos_noise
                 trafficflow_right_vehicle = np.array([[center_right-self.vehicle_length/2, center_right-self.vehicle_length/2, center_right+self.vehicle_length/2, center_right+self.vehicle_length/2,center_right-self.vehicle_length/2,center_right-self.vehicle_length/2,center_right+self.vehicle_length/2,center_right+self.vehicle_length/2,],
                         [self.lane_len/2, +self.chance_wid/2+self.lane_len/2, +self.chance_wid/2+self.lane_len/2, -self.chance_wid/2+self.lane_len/2, -self.chance_wid/2+self.lane_len/2, +self.chance_wid/2+self.lane_len/2, +self.chance_wid/2+self.lane_len/2, self.lane_len/2]])
                 trafficflow_right_outline.append(trafficflow_right_vehicle)
@@ -293,55 +335,165 @@ class SimVisual(object):
                 ith_car_right = num_right % 3
                 img_path = self.surr_v_color_list[ith_car_right]
                 self.flow_v_img = Image.open(img_path)
-                self.flow_v = ax_2d.imshow(self.flow_v_img, extent=(center_right-self.vehicle_length/1.8,center_right+self.vehicle_length/1.8,-self.vehicle_width/1.8+self.lane_len/2,+self.vehicle_width/1.8+self.lane_len/2))
+                y_noise = self.get_y_noise()
+                self.flow_v = ax_2d.imshow(self.flow_v_img, extent=(center_right-self.vehicle_length/1.8,center_right+self.vehicle_length/1.8,-self.vehicle_width/1.8+y_noise+self.lane_len/2,+self.vehicle_width/1.8+y_noise+self.lane_len/2))
+                random_yaw = self.get_random_yaw()
+                trans_data =  mtransforms.Affine2D().rotate_deg_around(center_right, y_noise+self.lane_len/2, np.rad2deg(random_yaw)) + ax_2d.transData
+                self.flow_v.set_transform(trans_data)
                 self.flow_v_list.append(self.flow_v)
 
-           
-            # plot quadrotor trajectory
-            self.l_vehicle_pos = ax_2d.scatter(vehicle_pos_arr[:, 0], vehicle_pos_arr[:, 1], s =150, c=self.vehicle_vx, cmap='winter', edgecolors='none')
+            '''
+            trafficflow_up_outline = []
+            #self.flow_v_list = []
+            for num_up in range(up_trafficflow_vehicle_num):
+                center_up = self.upflow_pos + self.vehicle_length/2 #+ 10
+                #if num_right != 0:
+                pos_noise = np.random.uniform(low=-1.25, high=1.25)
+                center_up += num_up * trafficflow_gap_len + pos_noise
+                trafficflow_up_vehicle = np.array([[center_up+self.vehicle_length/2, center_up+self.vehicle_length/2, center_up-self.vehicle_length/2, center_up-self.vehicle_length/2,center_up+self.vehicle_length/2,center_up+self.vehicle_length/2,center_up-self.vehicle_length/2,center_up-self.vehicle_length/2,],
+                        [3*self.lane_len/2, -self.chance_wid/2+3*self.lane_len/2, -self.chance_wid/2+3*self.lane_len/2, +self.chance_wid/2+3*self.lane_len/2, +self.chance_wid/2+3*self.lane_len/2, -self.chance_wid/2+3*self.lane_len/2, -self.chance_wid/2+3*self.lane_len/2, 3*self.lane_len/2]])
+                trafficflow_up_outline.append(trafficflow_up_vehicle)
+
+                ith_car_up = num_up % 3
+                img_path = self.surr_v_color_list[ith_car_up]
+                self.flow_v_img = Image.open(img_path)
+                self.flow_v = self.ax_2d.imshow(self.flow_v_img, extent=(center_up-self.vehicle_length/1.8,center_up+self.vehicle_length/1.8,-self.vehicle_width/1.8+3*self.lane_len/2,+self.vehicle_width/1.8+3*self.lane_len/2))
+                self.flow_v_list.append(self.flow_v)
+                '''
+
+            
+            trafficflow_upleft_outline = []
+            #self.flow_v_list = []
+
+            for num_upleft in range(upleft_trafficflow_vehicle_num):
+                #center_left = (self.chance_pos[0] - self.chance_len/2) - self.vehicle_length/2 
+                center_upleft = self.upflow_pos - 0.5*trafficflow_gap_len - self.vehicle_length/2 #+ 10
+                #if num_left != 0:
+                pos_noise = np.random.uniform(low=-1, high=1)
+                #else:
+                #    pos_noise = 0
+                center_upleft -= num_upleft * trafficflow_gap_len + pos_noise
+
+                trafficflow_upleft_vehicle = np.array([[center_upleft+self.vehicle_length/2, center_upleft+self.vehicle_length/2, center_upleft-self.vehicle_length/2, center_upleft-self.vehicle_length/2,center_upleft+self.vehicle_length/2,center_upleft+self.vehicle_length/2,center_upleft-self.vehicle_length/2,center_upleft-self.vehicle_length/2,],
+                        [3*self.lane_len/2, -self.chance_wid/2+3*self.lane_len/2, -self.chance_wid/2+3*self.lane_len/2, +self.chance_wid/2+3*self.lane_len/2, +self.chance_wid/2+3*self.lane_len/2, -self.chance_wid/2+3*self.lane_len/2, -self.chance_wid/2+3*self.lane_len/2, 3*self.lane_len/2]])
+                trafficflow_upleft_outline.append(trafficflow_upleft_vehicle)
+
+                ith_car_upleft = num_upleft % 3
+                img_path = self.surr_v_color_list[ith_car_upleft]
+                self.flow_v_img = Image.open(img_path)
+                y_noise = self.get_y_noise()
+                self.flow_v = ax_2d.imshow(self.flow_v_img, extent=(center_upleft-self.vehicle_length/1.8,center_upleft+self.vehicle_length/1.8,-self.vehicle_width/1.8+y_noise+3*self.lane_len/2,+self.vehicle_width/1.8+y_noise+3*self.lane_len/2))
+                random_yaw = self.get_random_yaw()
+                trans_data =  mtransforms.Affine2D().rotate_deg_around(center_upleft, y_noise+3*self.lane_len/2, np.rad2deg(random_yaw)) + ax_2d.transData
+                self.flow_v.set_transform(trans_data)
+                self.flow_v_list.append(self.flow_v)
+            ''''''
+
+            
+            trafficflow_upright_outline = []
+            for num_upright in range(upright_trafficflow_vehicle_num):
+                center_upright = self.upflow_pos +  self.vehicle_length/2 #+ 10  +0.5*trafficflow_gap_len
+                #if num_right != 0:
+                pos_noise = np.random.uniform(low=-1, high=1)
+                #else:
+                #    pos_noise = 0
+                center_upright += num_upright * trafficflow_gap_len + pos_noise
+                trafficflow_upright_vehicle = np.array([[center_upright+self.vehicle_length/2, center_upright+self.vehicle_length/2, center_upright-self.vehicle_length/2, center_upright-self.vehicle_length/2,center_upright+self.vehicle_length/2,center_upright+self.vehicle_length/2,center_upright-self.vehicle_length/2,center_upright-self.vehicle_length/2,],
+                        [3*self.lane_len/2, -self.chance_wid/2+3*self.lane_len/2, -self.chance_wid/2+3*self.lane_len/2, +self.chance_wid/2+3*self.lane_len/2, +self.chance_wid/2+3*self.lane_len/2, -self.chance_wid/2+3*self.lane_len/2, -self.chance_wid/2+3*self.lane_len/2, 3*self.lane_len/2]])
+                trafficflow_upright_outline.append(trafficflow_upright_vehicle)
+
+                ith_car_upright = num_upright % 3
+                img_path = self.surr_v_color_list[ith_car_upright]
+                self.flow_v_img = Image.open(img_path)
+                y_noise = self.get_y_noise()
+                self.flow_v = ax_2d.imshow(self.flow_v_img, extent=(center_upright-self.vehicle_length/1.8,center_upright+self.vehicle_length/1.8,-self.vehicle_width/1.8+y_noise+3*self.lane_len/2,+self.vehicle_width/1.8+y_noise+3*self.lane_len/2))
+                random_yaw = self.get_random_yaw()
+                trans_data =  mtransforms.Affine2D().rotate_deg_around(center_upright, y_noise+3*self.lane_len/2, np.rad2deg(random_yaw)) + ax_2d.transData
+                self.flow_v.set_transform(trans_data)
+                self.flow_v_list.append(self.flow_v)
+                ''''''
+            
+            trafficflow_front_outline = []
+            for num_front in range(front_flow_num):
+                center_front = f_v_pos[0] +  trafficflow_gap_len +self.vehicle_length/2 #+ 10  +0.5*trafficflow_gap_len
+                #if num_right != 0:
+                pos_noise = np.random.uniform(low=-1, high=1)
+                #else:
+                #    pos_noise = 0
+                center_front += num_front * trafficflow_gap_len + pos_noise
+                trafficflow_front_vehicle = np.array([[center_front+self.vehicle_length/2, center_front+self.vehicle_length/2, center_front-self.vehicle_length/2, center_front-self.vehicle_length/2,center_front+self.vehicle_length/2,center_front+self.vehicle_length/2,center_front-self.vehicle_length/2,center_front-self.vehicle_length/2,],
+                        [(-1)*self.lane_len/2, -self.chance_wid/2+(-1)*self.lane_len/2, -self.chance_wid/2+(-1)*self.lane_len/2, +self.chance_wid/2+(-1)*self.lane_len/2, +self.chance_wid/2+(-1)*self.lane_len/2, -self.chance_wid/2+(-1)*self.lane_len/2, -self.chance_wid/2+(-1)*self.lane_len/2, (-1)*self.lane_len/2]])
+                trafficflow_front_outline.append(trafficflow_front_vehicle)
+
+                ith_car_front = num_front % 3
+                img_path = self.surr_v_color_list[ith_car_front]
+                self.flow_v_img = Image.open(img_path)
+                y_noise = self.get_y_noise()
+                self.flow_v = ax_2d.imshow(self.flow_v_img, extent=(center_front-self.vehicle_length/1.8,center_front+self.vehicle_length/1.8,-self.vehicle_width/1.8+y_noise+(-1)*self.lane_len/2,+self.vehicle_width/1.8+y_noise+(-1)*self.lane_len/2))
+                random_yaw = self.get_random_yaw()
+                trans_data =  mtransforms.Affine2D().rotate_deg_around(center_front, y_noise+(-1)*self.lane_len/2, np.rad2deg(random_yaw)) + ax_2d.transData
+                self.flow_v.set_transform(trans_data)
+                self.flow_v_list.append(self.flow_v)
+
+            # plot vehicle trajectory
+            self.l_vehicle_pos = ax_2d.scatter(vehicle_pos_arr[:, 0], vehicle_pos_arr[:, 1], s =100, c=self.vehicle_vx, cmap='winter', edgecolors='none')
             #plt.colorbar(self.l_vehicle_pos,cax=ax_2d)
             data = np.hstack((vehicle_pos_arr[:, 0][:,np.newaxis], vehicle_pos_arr[:, 1][:,np.newaxis]))
             self.art.set_offsets(data)
-            self.art.set_color(self.cmap(self.norm(self.vehicle_vx))) 
+            self.art.set_color(self.cmap(self.norm(self.vehicle_vx)))
             
-            self.l_vehicle_pred_traj = ax_2d.scatter(pred_vehicle_traj[:, 0], pred_vehicle_traj[:, 1], s =150, c=pred_vehicle_traj[:, 3], cmap='autumn', edgecolors='none')
+            self.l_vehicle_pred_traj = ax_2d.scatter(pred_vehicle_traj[:, 0], pred_vehicle_traj[:, 1], s =100, c=pred_vehicle_traj[:, 3], cmap='autumn', edgecolors='none')
             data_pred = np.hstack((pred_vehicle_traj[:, 0][:,np.newaxis], pred_vehicle_traj[:, 1][:,np.newaxis]))
             self.art_pred.set_offsets(data_pred)
             self.art_pred.set_color(self.cmap_pred(self.norm_pred(pred_vehicle_traj[:, 3]))) 
             
 
+            #plt.tight_layout()
             # save eps fig
             #plt.savefig('./1.pdf', dpi=300)
-            #eval_dir = Path('./figs')
-            #fig_name = '%i' % (current_t*10)
+            eval_dir = Path('./fig')
+            fig_name = '%i' % (current_t*10)
             plt.tight_layout()
-            #self.fig.savefig(eval_dir / fig_name, dpi=600, bbox_inches='tight')
+            #self.fig.savefig(eval_dir / fig_name, dpi=100, bbox_inches='tight') # 600
+            #plt.show(self.fig)
+            self.fig.savefig(eval_dir / fig_name, format='pdf', bbox_inches='tight')
 
-            ax_2d.clear()
 
-        if len(self.flow_v_list) == 13:
+        #print(len(self.flow_v_list))
+
+        #self.ax_2d.clear()
+        if len(self.flow_v_list) == 27:
             return  self.l_vehicle_pred_traj,  \
                     self.l_vehicle_pos, self.art, \
                     self.l_acc, self.l_steer, self.l_vx, self.l_vy, \
                     self.ego_v,\
                     self.f_v, self.flow_v_list[0],self.flow_v_list[1],self.flow_v_list[2], self.flow_v_list[3],self.flow_v_list[4], \
-                    self.flow_v_list[5], self.flow_v_list[6], self.flow_v_list[-6],self.flow_v_list[-5], self.flow_v_list[-4], self.flow_v_list[-3], self.flow_v_list[-2] , self.flow_v_list[-1]     #self.flow_v_left_list.all
-                #self.l_vehicle_fill
-                #self.l_trafficflow_left_fill
-                #, self.l_surrounding_v_outline #self.l_vehicle_pos, self.l_vehicle_pred_traj, \ self.p_high_variable, 
+                    self.flow_v_list[5], self.flow_v_list[6], self.flow_v_list[7],self.flow_v_list[8], self.flow_v_list[9], self.flow_v_list[10], self.flow_v_list[11] , self.flow_v_list[12], \
+                    self.flow_v_list[13], self.flow_v_list[14], self.flow_v_list[15],self.flow_v_list[16], self.flow_v_list[17], self.flow_v_list[18], self.flow_v_list[19] , \
+                    self.flow_v_list[20], self.flow_v_list[21], self.flow_v_list[22],  self.flow_v_list[23], self.flow_v_list[24], self.flow_v_list[25], self.flow_v_list[26],
         
-        elif len(self.flow_v_list) == 14:
-            return  self.l_vehicle_pred_traj, \
+        elif len(self.flow_v_list) == 28:
+            return  self.l_vehicle_pred_traj,  \
                     self.l_vehicle_pos, self.art, \
                     self.l_acc, self.l_steer, self.l_vx, self.l_vy, \
                     self.ego_v,\
                     self.f_v, self.flow_v_list[0],self.flow_v_list[1],self.flow_v_list[2], self.flow_v_list[3],self.flow_v_list[4], \
-                    self.flow_v_list[5], self.flow_v_list[6], self.flow_v_list[7], self.flow_v_list[-6],self.flow_v_list[-5], self.flow_v_list[-4], self.flow_v_list[-3], self.flow_v_list[-2] , self.flow_v_list[-1]
+                    self.flow_v_list[5], self.flow_v_list[6], self.flow_v_list[7],self.flow_v_list[8], self.flow_v_list[9], self.flow_v_list[10], self.flow_v_list[11] , self.flow_v_list[12], \
+                    self.flow_v_list[13], self.flow_v_list[14], self.flow_v_list[15],self.flow_v_list[16], self.flow_v_list[17], self.flow_v_list[18], self.flow_v_list[19] , self.flow_v_list[20],  \
+                    self.flow_v_list[21], self.flow_v_list[22], self.flow_v_list[23], self.flow_v_list[24], self.flow_v_list[25], self.flow_v_list[26], self.flow_v_list[27],
         
         else:
-            return  self.l_vehicle_pred_traj, \
-                    self.l_vehicle_pos,  self.art, \
+            return  self.l_vehicle_pred_traj,  \
+                    self.l_vehicle_pos, self.art, \
                     self.l_acc, self.l_steer, self.l_vx, self.l_vy, \
                     self.ego_v,\
                     self.f_v, self.flow_v_list[0],self.flow_v_list[1],self.flow_v_list[2], self.flow_v_list[3],self.flow_v_list[4], \
-                    self.flow_v_list[5], self.flow_v_list[6], self.flow_v_list[7], self.flow_v_list[8],self.flow_v_list[-6],self.flow_v_list[-5], self.flow_v_list[-4], self.flow_v_list[-3], self.flow_v_list[-2] , self.flow_v_list[-1]
+                    self.flow_v_list[5], self.flow_v_list[6], self.flow_v_list[7],self.flow_v_list[8], self.flow_v_list[9], self.flow_v_list[10], self.flow_v_list[11] , self.flow_v_list[12], \
+                    self.flow_v_list[13], self.flow_v_list[14], self.flow_v_list[15],self.flow_v_list[16], self.flow_v_list[17], self.flow_v_list[18], self.flow_v_list[19] , self.flow_v_list[20],  \
+                    self.flow_v_list[21], self.flow_v_list[22], self.flow_v_list[23], self.flow_v_list[24], self.flow_v_list[25], self.flow_v_list[26], self.flow_v_list[27],  self.flow_v_list[28], 
+    
+    def get_y_noise(self):
+        return np.random.uniform(low=-0.5, high=0.5)
+    
+    def get_random_yaw(self):
+        return np.random.uniform(low=-0.05, high=0.075)

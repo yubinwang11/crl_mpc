@@ -40,7 +40,7 @@ def arg_parser():
                         help="Save the model of nn")
     parser.add_argument('--load_model', type=bool, default=False,
                         help="Load the trained model of nn")
-    parser.add_argument('--use_SE3', type=bool, default=True,
+    parser.add_argument('--use_SE3', type=bool, default=False,
                         help="Baselines")
     return parser
 
@@ -48,7 +48,7 @@ def main():
 
     args = arg_parser().parse_args()
 
-    device = torch.device('cuda:3' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
     num_episode = args.episode_num
 
@@ -88,7 +88,7 @@ def main():
     if args.run_wandb:
         wandb.init(
         # set the wandb project where this run will be logged
-        project="crl_mpc",
+        project="lane-change",
         entity="yubinwang",
         # track hyperparameters and run metadata
         config={

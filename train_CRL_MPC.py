@@ -48,7 +48,7 @@ def main():
 
     args = arg_parser().parse_args()
 
-    device = torch.device('cuda:3' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
     num_episode = args.episode_num
 
@@ -89,7 +89,7 @@ def main():
     if args.run_wandb:
         wandb.init(
         # set the wandb project where this run will be logged
-        project="crl_mpc",
+        project="lane-change",
         entity="yubinwang",
         # track hyperparameters and run metadata
         config={

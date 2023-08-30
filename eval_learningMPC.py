@@ -25,7 +25,7 @@ from parameters import *
 def arg_parser():
     
     parser = argparse.ArgumentParser()
-    parser.add_argument('--clear_visualization', type=bool, default=False,
+    parser.add_argument('--clear_visualization', type=bool, default=True,
                         help="Play animation")
     parser.add_argument('--save_video', type=bool, default=True,
                         help="Save the animation as a video file")
@@ -108,6 +108,8 @@ def eval_learningMPC(args):
         high_variable[11] = 10 # Qomega
         high_variable[-1] = 2 # t
 
+    #print('observation is', obs)
+    #print('decision variables are', high_variable)
     worker.run_episode(high_variable, args)
 
     if args.clear_visualization:
@@ -124,9 +126,12 @@ def eval_learningMPC(args):
 
     if not args.clear_visualization:
         plt.tight_layout()
-        plt.show()
+        plt.show(ani)
         pass
-    #plt.savefig('./1.eps', dpi=300)
+    #plt.savefig('./fig/1.eps', dpi=300)
+    
+    #plt.tight_layout()
+    #plt.show()
     
     if args.save_video:
         writer = animation.writers["ffmpeg"]

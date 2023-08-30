@@ -44,7 +44,7 @@ class Bicycle_Dynamics(object):
         
         # Sampling range of the vehicle's initial position
         self._xy_dist = np.array(
-            [ [5, 35 ]]   # x
+            [ [25, 35 ]]   # x
         )
         # Sampling range of the vehicle's initial velocity
         self._vxy_dist = np.array(
@@ -60,7 +60,7 @@ class Bicycle_Dynamics(object):
             self._state[kpx] = np.random.uniform(
                 low=self._xy_dist[0, 0], high=self._xy_dist[0, 1])
            # self._state[kpx]  = 0    
-            self._state[kpy] = -3 #np.random.uniform(
+            self._state[kpy] = -2.5 #np.random.uniform(
                 #low=self._xyz_dist[1, 0], high=self._xyz_dist[1, 1])
             #self._state[kPosZ] = np.random.uniform(
                 #low=self._xyz_dist[2, 0], high=self._xyz_dist[2, 1])
